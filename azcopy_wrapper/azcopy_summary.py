@@ -1,5 +1,5 @@
 import re
-from azcopy_wrapper.azcopy_utilities import AzCopyJobInfo, AzSyncJobInfo
+from azcopy_wrapper.azcopy_utilities import AzCopyJobInfo, AzSyncJobInfo, AzRemoveJobInfo
 
 
 def get_property_value(key: str, job_summary: str) -> int:
@@ -106,3 +106,37 @@ def get_sync_summary_info(sync_job_info: AzSyncJobInfo, summary: str) -> AzSyncJ
     # sync_job_info.elapsed_time_minutes = property_value
 
     return sync_job_info
+
+
+def get_remove_summary_info(
+    remove_job_info: AzRemoveJobInfo, summary: str
+) -> AzRemoveJobInfo:
+    """
+    Extract all properties of Remove Job Info from the Azcopy remove job summary
+    """
+
+    properties_required = [
+        "Number of Files Removed",
+        "Number of Folders Removed", 
+        "Total Number of Removals",
+        "Number of Removals Completed",
+        "Number of Removals Failed",
+        "Number of Removals Skipped",
+    ]
+
+    for property_key in properties_required:
+        # Converting the property key string to attribute form
+        property_attribute = (
+            property_key.lower().replace(" ", "_").replace("(", "").replace(")", "")
+        )
+        property_value = get_property_value(property_key, summary)
+
+        # Set the attribute in remove_job_info object
+        setattr(remove_job_info, property_attribute, property_value)
+
+    # Get total bytes removed using different property key format
+    remove_job_info.total_bytes_removed = get_property_value(
+        "TotalBytesRemoved", summary
+    )
+
+    return remove_job_info

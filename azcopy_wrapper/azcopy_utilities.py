@@ -298,3 +298,242 @@ class AzSyncJobInfo:
         self.total_number_of_bytes_transferred = total_number_of_bytes_transferred
         self.total_number_of_bytes_enumerated = total_number_of_bytes_enumerated
         self.completed = completed
+
+
+class AzListOptions:
+    """
+    Class to give specific options for listing files using Azcopy list command
+    """
+
+    properties: Optional[str]
+    output_type: str
+    output_level: Optional[str]
+    machine_readable: bool
+    mega_units: bool
+    running_tally: bool
+    trailing_dot: Optional[str]
+
+    def __init__(
+        self,
+        properties: Optional[str] = None,
+        output_type: str = "text",
+        output_level: Optional[str] = None,
+        machine_readable: bool = False,
+        mega_units: bool = False,
+        running_tally: bool = False,
+        trailing_dot: Optional[str] = None,
+    ) -> None:
+        self.properties = properties
+        self.output_type = output_type
+        self.output_level = output_level
+        self.machine_readable = machine_readable
+        self.mega_units = mega_units
+        self.running_tally = running_tally
+        self.trailing_dot = trailing_dot
+
+    def get_options_list(self) -> List[str]:
+        list_options = []
+
+        # Specify properties to display (semicolon separated in double quotes)
+        if self.properties:
+            list_options.append("--properties")
+            list_options.append(f'"{self.properties}"')
+
+        # Output format type
+        if self.output_type != "text":
+            list_options.append("--output-type")
+            list_options.append(self.output_type)
+
+        # Output level
+        if self.output_level:
+            list_options.append("--output-level")
+            list_options.append(self.output_level)
+
+        # Machine readable format
+        if self.machine_readable:
+            list_options.append("--machine-readable")
+
+        # Mega units (1000 instead of 1024)
+        if self.mega_units:
+            list_options.append("--mega-units")
+
+        # Count files and total size
+        if self.running_tally:
+            list_options.append("--running-tally")
+
+        # Trailing dot handling
+        if self.trailing_dot:
+            list_options.append("--trailing-dot")
+            list_options.append(self.trailing_dot)
+
+        return list_options
+
+
+class AzListJobInfo:
+    """
+    Store the result information from azcopy list command
+    """
+
+    error_msg: str
+    final_job_status_msg: str
+    completed: bool
+    output_text: str
+    items: List[dict]
+
+    def __init__(
+        self,
+        error_msg: str = "",
+        final_job_status_msg: str = "",
+        completed: bool = False,
+        output_text: str = "",
+        items: Optional[List[dict]] = None,
+    ) -> None:
+        self.error_msg = error_msg
+        self.final_job_status_msg = final_job_status_msg
+        self.completed = completed
+        self.output_text = output_text
+        self.items = items or []
+
+
+class AzRemoveOptions:
+    """
+    Class to give specific options for data removal using Azcopy remove command
+    """
+
+    recursive: bool
+    include_pattern: Optional[str]
+    exclude_pattern: Optional[str]
+    dry_run: bool
+    delete_snapshots: Optional[str]
+    list_of_files: Optional[str]
+    list_of_versions: Optional[str]
+    force_if_read_only: bool
+    permanent_delete: bool
+    include_after: Optional[str]
+    include_before: Optional[str]
+
+    def __init__(
+        self,
+        recursive: bool = False,
+        include_pattern: Optional[str] = None,
+        exclude_pattern: Optional[str] = None,
+        dry_run: bool = False,
+        delete_snapshots: Optional[str] = None,
+        list_of_files: Optional[str] = None,
+        list_of_versions: Optional[str] = None,
+        force_if_read_only: bool = False,
+        permanent_delete: bool = False,
+        include_after: Optional[str] = None,
+        include_before: Optional[str] = None,
+    ) -> None:
+        self.recursive = recursive
+        self.include_pattern = include_pattern
+        self.exclude_pattern = exclude_pattern
+        self.dry_run = dry_run
+        self.delete_snapshots = delete_snapshots
+        self.list_of_files = list_of_files
+        self.list_of_versions = list_of_versions
+        self.force_if_read_only = force_if_read_only
+        self.permanent_delete = permanent_delete
+        self.include_after = include_after
+        self.include_before = include_before
+
+    def get_options_list(self) -> List[str]:
+        remove_options = []
+
+        # Look into subdirectories recursively when removing
+        if self.recursive:
+            remove_options.append("--recursive")
+
+        # Include only files whose names match the pattern
+        if self.include_pattern:
+            remove_options.append("--include-pattern")
+            remove_options.append(self.include_pattern)
+
+        # Exclude files whose names match the pattern
+        if self.exclude_pattern:
+            remove_options.append("--exclude-pattern")
+            remove_options.append(self.exclude_pattern)
+
+        # Show what would be removed without actually removing
+        if self.dry_run:
+            remove_options.append("--dry-run")
+
+        # Delete snapshots (include, only, none)
+        if self.delete_snapshots:
+            remove_options.append("--delete-snapshots")
+            remove_options.append(self.delete_snapshots)
+
+        # List of files to be removed from the source
+        if self.list_of_files:
+            remove_options.append("--list-of-files")
+            remove_options.append(self.list_of_files)
+
+        # List of versions to be removed from the source
+        if self.list_of_versions:
+            remove_options.append("--list-of-versions")
+            remove_options.append(self.list_of_versions)
+
+        # Force remove even if the file is read-only
+        if self.force_if_read_only:
+            remove_options.append("--force-if-read-only")
+
+        # Delete permanently without moving to recycle bin
+        if self.permanent_delete:
+            remove_options.append("--permanent-delete")
+
+        # Include only files whose last modified time is on or after the given value
+        if self.include_after:
+            remove_options.append("--include-after")
+            remove_options.append(self.include_after)
+
+        # Include only files whose last modified time is on or before the given value
+        if self.include_before:
+            remove_options.append("--include-before")
+            remove_options.append(self.include_before)
+
+        return remove_options
+
+
+class AzRemoveJobInfo:
+    """
+    Store the job info of the Azcopy remove job executed by the user
+    """
+
+    percent_complete: float
+    error_msg: str
+    final_job_status_msg: str
+    completed: bool
+    number_of_files_removed: int
+    number_of_folders_removed: int
+    total_number_of_removals: int
+    number_of_removals_completed: int
+    number_of_removals_failed: int
+    number_of_removals_skipped: int
+    total_bytes_removed: int
+
+    def __init__(
+        self,
+        percent_complete: float = float(0),
+        error_msg: str = "",
+        final_job_status_msg: str = "",
+        completed: bool = False,
+        number_of_files_removed: int = 0,
+        number_of_folders_removed: int = 0,
+        total_number_of_removals: int = 0,
+        number_of_removals_completed: int = 0,
+        number_of_removals_failed: int = 0,
+        number_of_removals_skipped: int = 0,
+        total_bytes_removed: int = 0,
+    ) -> None:
+        self.percent_complete = percent_complete
+        self.error_msg = error_msg
+        self.final_job_status_msg = final_job_status_msg
+        self.completed = completed
+        self.number_of_files_removed = number_of_files_removed
+        self.number_of_folders_removed = number_of_folders_removed
+        self.total_number_of_removals = total_number_of_removals
+        self.number_of_removals_completed = number_of_removals_completed
+        self.number_of_removals_failed = number_of_removals_failed
+        self.number_of_removals_skipped = number_of_removals_skipped
+        self.total_bytes_removed = total_bytes_removed
